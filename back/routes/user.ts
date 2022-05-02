@@ -5,6 +5,7 @@ import * as passport from 'passport';
 import { isLoggedIn, isNotLoggedIn } from './middleware';
 import User from '../models/user';
 import Post from '../models/post';
+import Image from '../models/image';
 
 const router = express.Router();
 
@@ -127,19 +128,125 @@ router.get('/:id', async(req, res, next) => {
     }
 });
 
-router.get('/:id/followings', isLoggedIn, async(req, res, next) => {
+router.get<any, any, any, { limit: string, offset: string }>('/:id/followings', isLoggedIn, async(req, res, next) => {
     try {
         // 항상 먼저 해당 사용자가 존재하는지 먼저 찾아보기! 탈퇴했을수도 있으니까
         const user = await User.findOne({
             where: { id: parseInt(req.params.id, 10) || (req.user && req.user.id) || 0 },
         });
         if (!user) return res.status(404).send('No user');
-        // 그러고 나서 팔로워 찾기
+        // 그러고 나서 팔로잉 찾기
         const followings = await User.getFollowings({
             attributes: ['id', 'nickname'],
-        })
+            limit: parseInt(req.query.limit as string, 10),     // string으로 타입 강제해서 에러 해결
+            offset: parseInt(req.query.offset as string, 10),
+        });
+        return res.json(followings);
     } catch (err) {
         console.error(err);
         return next(err);
     }
 });
+
+router.get<any, any, any, { limit: string, offset: string }>('/:id/followers', isLoggedIn, async(req, res, next) => {
+    try {
+        const user = await User.findOne({
+            where: { id: parseInt(req.params.id, 10) || (req.user && req.user.id) || 0 },
+        });
+        if (!user) return res.status(404).send('No user');
+        const followers = await User.getFollowers({
+            attributes: ['id', 'nickname'],
+            limit: parseInt(req.query.limit as string, 10),
+            offset: parseInt(req.query.offset as string, 10),
+        });
+        return res.json(followers);
+    } catch (err) {
+        console.error(err);
+        return next(err);
+    }
+});
+
+// 팔로워 삭제
+router.delete('/:id/follower', isLoggedIn, async (req, res, next) => {
+    try {
+        const me = await User.findOne({
+            where: { id: req.user!.id },
+        });
+        await me!.removeFollower(parseInt(req.params.id, 10));
+        res.send(req.params.id);
+    } catch (err) {
+        console.error(err);
+        return next(err);
+    }
+});
+
+// 팔로우하기
+router.post('/:id/follow', isLoggedIn, async (req, res, next) => {
+    try {
+        const me = await User.findOne({
+            where: {id: req.user!.id},
+        });
+        await me!.addFollowing(parseInt(req.params.id, 10));
+        res.send(req.params.id);
+    } catch (err) {
+        console.error(err);
+        return next(err);
+    }
+});
+
+// 팔로우 취소
+router.delete('/:id/follow', isLoggedIn, async (req, res, next) => {
+    try {
+        const me = await User.findOne({
+            where: {id: req.user!.id},
+        });
+        await me!.removeFollowing(parseInt(req.params.id, 10));
+        res.send(req.params.id);
+    } catch (err) {
+        console.error(err);
+        return next(err);
+    }
+});
+
+// 어떤 사람의 게시글 가져오기
+router.get('/:id/posts', async (req, res, next) => {
+    try {
+        const posts = await Post.findAll({
+          where: {
+            UserId: parseInt(req.params.id, 10) || (req.user && req.user.id) || 0,  // 유저 아이디가 특정 사람의 아이디 || 내 아이디 || 내 아이디마저 없다면 0 넣는 꼼수
+            RetweetId: null,
+          },
+          include: [{
+            model: User,
+            attributes: ['id', 'nickname'],
+          }, {
+            model: Image,
+          }, {
+            model: User,
+            as: 'Likers',
+            attributes: ['id'],
+          }],
+        });
+        res.json(posts);
+      } catch (err) {
+        console.error(err);
+        return next(err);
+      }
+});
+
+// 닉네임 수정
+router.patch('/nickname', isLoggedIn, async (req, res, next) => {
+    try {
+      await User.update({
+        nickname: req.body.nickname,
+      }, {
+        where: { id: req.user!.id },
+      });
+      res.send(req.body.nickname);
+    } catch (err) {
+      console.error(err);
+      return next(err);
+    }
+  });
+
+export default router;

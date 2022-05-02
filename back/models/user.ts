@@ -19,12 +19,12 @@ class User extends Model {
     public readonly Followers?: User[];
     public readonly Followings?: User[];
 
-    static addFollowing: BelongsToManyAddAssociationMixin<User, number>;
-    static getFollowings: BelongsToManyGetAssociationsMixin<User>;     // ??
-    static removeFollowings: BelongsToManyRemoveAssociationMixin<User, number>;     // remove는 제네릭이 두 개 필요함
+    static getFollowings: BelongsToManyGetAssociationsMixin<User>;     // The getAssociations mixin applied to models with belongsToMany
     static getFollowers: BelongsToManyGetAssociationsMixin<User>;
-    static removeFollowers: BelongsToManyRemoveAssociationMixin<User, number>;
-    static getPost: HasManyGetAssociationsMixin<Post>;
+    public addFollowing!: BelongsToManyAddAssociationMixin<User, number>;
+    public removeFollowing!: BelongsToManyRemoveAssociationMixin<User, number>;     // remove는 제네릭이 두 개 필요함
+    public removeFollower!: BelongsToManyRemoveAssociationMixin<User, number>;
+    public getPost!: HasManyGetAssociationsMixin<Post>;
 }
 
 User.init({
@@ -51,6 +51,8 @@ User.init({
 // 모델간 관계 형성
 export const associate = (db: dbType) => {
     db.User.hasMany(db.Post, { as: 'Posts' });
+    db.User.hasMany(db.Comment);
+    db.User.belongsToMany(db.Post, { through: 'Like', as: 'Liked'});    // as 이름대로 메소드가 생성됨
     db.User.belongsToMany(db.User, { through: 'Follow', as: 'Followings', foreignKey: 'followerId' });  // as가 가리키는 것과 foreignKey가 가리키는 것은 서로 반대
     db.User.belongsToMany(db.User, { through: 'Follow', as: 'Followers', foreignKey: 'followingId' });
 }
