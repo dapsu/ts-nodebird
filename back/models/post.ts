@@ -1,8 +1,9 @@
 import { dbType } from ".";
 import { sequelize } from "./sequelize";
-import { BelongsToManyAddAssociationsMixin, DataTypes, HasManyAddAssociationMixin, HasManyAddAssociationsMixin, Model } from "sequelize";
+import { BelongsToManyAddAssociationMixin, BelongsToManyAddAssociationsMixin, BelongsToManyRemoveAssociationMixin, DataTypes, HasManyAddAssociationMixin, HasManyAddAssociationsMixin, Model } from "sequelize";
 import Hashtag from "./hashtag";
 import Image from "./image";
+import User from "./user";
 
 class Post extends Model {
     public readonly id!: number;
@@ -10,9 +11,15 @@ class Post extends Model {
     public readonly createAt!: Date;
     public readonly updateAt!: Date;
 
+    public UserId!: number;
+    public readonly Retweet?: Post;
+    public RetweetId?: number;
+
     public addHashTags!: BelongsToManyAddAssociationsMixin<Hashtag, number>;
     public addImages!: HasManyAddAssociationsMixin<Image, number>;
     public addImage!: HasManyAddAssociationMixin<Image, number>;
+    public addLiker!: BelongsToManyAddAssociationMixin<User, number>;
+    public removeLiker!: BelongsToManyRemoveAssociationMixin<User, number>;
 }
 
 Post.init({

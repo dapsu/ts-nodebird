@@ -11,6 +11,8 @@ import helmet from "helmet";
 import { sequelize } from './models';
 import userRouter from './routes/user';
 import postRouter from './routes/post';
+import postsRouter from './routes/posts';
+import hashtagRouter from './routes/hashtag';
 
 dotenv.config();
 const app = express();
@@ -65,6 +67,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use('/user', userRouter);
 app.use('/post', postRouter);
+app.use('/posts', postsRouter);
+app.use('/hashtage', hashtagRouter);
 app.get('/', (req, res) => {
     res.send('nodebird 백엔드 정상 동작!');
 });
