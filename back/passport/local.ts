@@ -8,6 +8,8 @@ export default () => {
     passport.use('local', new Strategy({
         usernameField: 'userId',
         passwordField: 'password',
+        // session: false,     // 세션에 로그인 정보 저장 안할 때 false
+        // passReqToCallback: true,     // req 객체를 passport 인증 시 활용
     }, async (userId, password, done) => {
         try {
             const user = await User.findOne({ where: { userId } });
