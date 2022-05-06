@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "delcaration": true,
+        "lib": ["dom", "es2020"],
+        "target": "esnext",
+        "module": "esnext"
+    }
+}

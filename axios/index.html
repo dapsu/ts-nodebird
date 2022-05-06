@@ -1,0 +1,24 @@
+<script src="./index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.16/require.min.js"></script>
+<script>
+    requirejs.config({
+        paths: {
+            axios: './index.js'
+        }
+    });
+
+    requirejs(['axios'], function (axios) {
+        axios.get('https://api.github.com/users/mzabriskie')
+            .then(function (user) {
+                document.getElementById('useravatar').src = user.data.avatar_url;
+                document.getElementById('username').innerHTML = user.data.name;
+            });
+    });
+</script>
+<script>
+    console.log(axios);
+    axios.defaults.baseUrl = 'https://jsonplaceholder.typicode.com/todos/1';
+    axios.get('/').then(function (result) {
+        console.log(result);
+    });
+</script>
